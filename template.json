@@ -1,0 +1,258 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualMachines_DEMO_WEB01_adminPassword": {
+            "defaultValue": null,
+            "type": "SecureString"
+        },
+        "virtualMachines_DEMO_WEB01_name": {
+            "defaultValue": "DEMO-WEB01",
+            "type": "String"
+        },
+        "networkInterfaces_demo_web01565_name": {
+            "defaultValue": "demo-web01565",
+            "type": "String"
+        },
+        "networkSecurityGroups_DEMO_WEB01_nsg_name": {
+            "defaultValue": "DEMO-WEB01-nsg",
+            "type": "String"
+        },
+        "networkSecurityGroups_DMZ_NSG_name": {
+            "defaultValue": "DMZ-NSG",
+            "type": "String"
+        },
+        "publicIPAddresses_DEMO_WEB01_ip_name": {
+            "defaultValue": "DEMO-WEB01-ip",
+            "type": "String"
+        },
+        "virtualNetworks_DEMO_DMZ_VNET_name": {
+            "defaultValue": "DEMO-DMZ-VNET",
+            "type": "String"
+        },
+        "storageAccounts_demodmzdisks684_name": {
+            "defaultValue": "demodmzdisks684",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "comments": "Generalized from resource: '/subscriptions/831d251c-ac70-42be-9ddc-edc23203b2ac/resourceGroups/DEMO-DMZ/providers/Microsoft.Compute/virtualMachines/DEMO-WEB01'.",
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[parameters('virtualMachines_DEMO_WEB01_name')]",
+            "apiVersion": "2015-06-15",
+            "location": "westcentralus",
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_DS1_v2"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2016-Datacenter",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "[parameters('virtualMachines_DEMO_WEB01_name')]",
+                        "createOption": "FromImage",
+                        "vhd": {
+                            "uri": "[concat('https', '://', parameters('storageAccounts_demodmzdisks684_name'), '.blob.core.windows.net', concat('/vhds/', parameters('virtualMachines_DEMO_WEB01_name'),'20170130125751.vhd'))]"
+                        },
+                        "caching": "ReadWrite"
+                    },
+                    "dataDisks": []
+                },
+                "osProfile": {
+                    "computerName": "[parameters('virtualMachines_DEMO_WEB01_name')]",
+                    "adminUsername": "tyrion",
+                    "windowsConfiguration": {
+                        "provisionVMAgent": true,
+                        "enableAutomaticUpdates": true
+                    },
+                    "secrets": [],
+                    "adminPassword": "[parameters('virtualMachines_DEMO_WEB01_adminPassword')]"
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_demo_web01565_name'))]"
+                        }
+                    ]
+                }
+            },
+            "resources": [],
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_demodmzdisks684_name'))]",
+                "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_demo_web01565_name'))]"
+            ]
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/831d251c-ac70-42be-9ddc-edc23203b2ac/resourceGroups/DEMO-DMZ/providers/Microsoft.Network/networkInterfaces/demo-web01565'.",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[parameters('networkInterfaces_demo_web01565_name')]",
+            "apiVersion": "2016-03-30",
+            "location": "westcentralus",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAddress": "10.3.0.4",
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_DEMO_WEB01_ip_name'))]"
+                            },
+                            "subnet": {
+                                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_DEMO_DMZ_VNET_name')), '/subnets/DMZ-Subnet')]"
+                            }
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": []
+                },
+                "enableIPForwarding": false,
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_DEMO_WEB01_nsg_name'))]"
+                }
+            },
+            "resources": [],
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_DEMO_WEB01_ip_name'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_DEMO_DMZ_VNET_name'))]",
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_DEMO_WEB01_nsg_name'))]"
+            ]
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/831d251c-ac70-42be-9ddc-edc23203b2ac/resourceGroups/DEMO-DMZ/providers/Microsoft.Network/networkSecurityGroups/DEMO-WEB01-nsg'.",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "name": "[parameters('networkSecurityGroups_DEMO_WEB01_nsg_name')]",
+            "apiVersion": "2016-03-30",
+            "location": "westcentralus",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "default-allow-rdp",
+                        "properties": {
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "3389",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 1000,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "allow-http",
+                        "properties": {
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "80",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 1010,
+                            "direction": "Inbound"
+                        }
+                    }
+                ]
+            },
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/831d251c-ac70-42be-9ddc-edc23203b2ac/resourceGroups/DEMO-DMZ/providers/Microsoft.Network/networkSecurityGroups/DMZ-NSG'.",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "name": "[parameters('networkSecurityGroups_DMZ_NSG_name')]",
+            "apiVersion": "2016-03-30",
+            "location": "westcentralus",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "RDP-allow",
+                        "properties": {
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "3389",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 110,
+                            "direction": "Inbound"
+                        }
+                    }
+                ]
+            },
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/831d251c-ac70-42be-9ddc-edc23203b2ac/resourceGroups/DEMO-DMZ/providers/Microsoft.Network/publicIPAddresses/DEMO-WEB01-ip'.",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[parameters('publicIPAddresses_DEMO_WEB01_ip_name')]",
+            "apiVersion": "2016-03-30",
+            "location": "westcentralus",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "idleTimeoutInMinutes": 4
+            },
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/831d251c-ac70-42be-9ddc-edc23203b2ac/resourceGroups/DEMO-DMZ/providers/Microsoft.Network/virtualNetworks/DEMO-DMZ-VNET'.",
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[parameters('virtualNetworks_DEMO_DMZ_VNET_name')]",
+            "apiVersion": "2016-03-30",
+            "location": "westcentralus",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.3.0.0/25"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "DMZ-Subnet",
+                        "properties": {
+                            "addressPrefix": "10.3.0.0/28",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_DMZ_NSG_name'))]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "Backend-Subnet",
+                        "properties": {
+                            "addressPrefix": "10.3.0.16/28"
+                        }
+                    }
+                ]
+            },
+            "resources": [],
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_DMZ_NSG_name'))]"
+            ]
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/831d251c-ac70-42be-9ddc-edc23203b2ac/resourceGroups/demo-dmz/providers/Microsoft.Storage/storageAccounts/demodmzdisks684'.",
+            "type": "Microsoft.Storage/storageAccounts",
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "kind": "Storage",
+            "name": "[parameters('storageAccounts_demodmzdisks684_name')]",
+            "apiVersion": "2016-01-01",
+            "location": "westcentralus",
+            "tags": {},
+            "properties": {},
+            "resources": [],
+            "dependsOn": []
+        }
+    ]
+}
